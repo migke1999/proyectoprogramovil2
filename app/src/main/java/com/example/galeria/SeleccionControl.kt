@@ -53,7 +53,9 @@ class SeleccionControl : LinearLayout {
                 if(conjuntoSel == 0)
                     datos = arrayOf("Escala de grises", "invertido", "brillo", "contraste", "gamma", "escala de color azul")
                 else if(conjuntoSel == 1)
-                    datos = arrayOf("Otra opc", "otra", "y otra", "por ultimo", "esta")
+                    datos = arrayOf("Smoothing", "Gaussian blur", "Sharpen", "mean", "Embossing", "Edge")
+                else if(conjuntoSel == 2)
+                    datos = arrayOf("Primero", "Segundo", "Tercero", "Cuarto", "Quinto")
                 val adaptador1 = ArrayAdapter(this.context, android.R.layout.simple_spinner_item,datos)
                 adaptador1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 val opciones:Spinner = findViewById(R.id.Opcfiltros)
@@ -77,6 +79,10 @@ class SeleccionControl : LinearLayout {
 
 
         boton.setOnClickListener {
+            if(conjuntoSel== 1)
+                opcion+=6
+            else if (conjuntoSel==2)
+                opcion+=12
             val intento1  = Intent(this.context, filtros::class.java)
             intento1.putExtra("opcion", opcion)
             this.context.startActivity(intento1)

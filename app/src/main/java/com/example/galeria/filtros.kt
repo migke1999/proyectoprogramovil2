@@ -3,21 +3,25 @@ package com.example.galeria
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.net.Uri
-import android.os.Build
 import android.graphics.Color
 import android.graphics.Paint
-import androidx.appcompat.app.AppCompatActivity
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.ImageView
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.createBitmap
 
 class filtros : AppCompatActivity() {
     lateinit var imagen : ImageView
     lateinit var boton: Button
+    lateinit var botonCambiar : Button
+    lateinit var botonRegresar : Button
     lateinit var imagen2 : ImageView
+    lateinit var bitmap : Bitmap
     var filtros : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,21 +31,20 @@ class filtros : AppCompatActivity() {
         println("llega " + filtros)
         imagen = findViewById(R.id.imagenPrin)
         boton = findViewById(R.id.boton)
+        botonCambiar = findViewById(R.id.cambiar)
+        botonRegresar = findViewById(R.id.regresar)
 
         boton.setOnClickListener {
             var intent : Intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             intent.setType("image/")
             startActivityForResult(intent,10)
         }
-    }
+        botonRegresar.setOnClickListener {
 
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode== AppCompatActivity.RESULT_OK) {
-            val selectedImage: Uri? = data?.data
-            val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, selectedImage)
             imagen.setImageBitmap(bitmap)
+        }
+
+        botonCambiar.setOnClickListener {
             var bitmap2 : Bitmap? = bitmap
             when (filtros) {
                 0 -> {
@@ -63,6 +66,37 @@ class filtros : AppCompatActivity() {
                 5 -> {
                     bitmap2 = color(bitmap)
                 }
+                6 -> {
+                    bitmap2= smoothing(bitmap)
+                }
+                7 -> {
+                    bitmap2 = gaussian(bitmap)
+                }
+                8 -> {
+                    bitmap2 = sharpen(bitmap)
+                }
+                9 -> {
+                    bitmap2 = mean(bitmap)
+                }
+                10 -> {
+                    bitmap2 = embossing(bitmap)
+                }
+                11 -> {
+                    bitmap2 = edge(bitmap)
+                }
+                12 -> {
+                    bitmap2 = Sapia(bitmap,50,2.2, 0.0, 2.2)
+                }
+                13 -> {
+                    bitmap2 = invento2(bitmap)
+                }
+                14 -> {
+                    bitmap2 = invento3(bitmap)
+                }
+                15 -> {
+                    bitmap2 = mirror(bitmap)
+                }
+
                 //var bitmap2 : Bitmap? = doGamma(bitmap,1.8,1.8,1.8)
                 //var bitmap2 : Bitmap?= adjustedContrast(bitmap, 50.0)
                 //var bitmap2 : Bitmap? = applyInvert(bitmap)
@@ -75,6 +109,17 @@ class filtros : AppCompatActivity() {
 
 
     }
+
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode== AppCompatActivity.RESULT_OK) {
+            val selectedImage: Uri? = data?.data
+             bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, selectedImage)
+            imagen.setImageBitmap(bitmap)
+        }
+    }
+
     fun applyGscale(src: Bitmap): Bitmap? {
         // constant factors
         val GS_RED = 0.299
@@ -158,7 +203,7 @@ class filtros : AppCompatActivity() {
         // return final image
         return bmOut
     }
-    fun applySapia(src: Bitmap, depth: Int, red: Double, green: Double, blue: Double): Bitmap? {
+    fun Sapia(src: Bitmap, depth: Int, red: Double, green: Double, blue: Double): Bitmap? {
         // image size // 50,2.2, 0.0, 2.2
         val width = src.width
         val height = src.height
@@ -327,11 +372,6 @@ class filtros : AppCompatActivity() {
     }
 
     fun color(src: Bitmap): Bitmap? {
-        // constant factors
-        val GS_RED = 0.299
-        val GS_GREEN = 0.587
-        val GS_BLUE = 0.114
-
         // create output bitmap
         val bmOut = Bitmap.createBitmap(src.width, src.height, src.config)
         // pixel information
@@ -369,6 +409,223 @@ class filtros : AppCompatActivity() {
         // return final image
         return bmOut
     }
+    fun smoothing( bitmap : Bitmap) : Bitmap {
+
+        var filtro : ConvolutionFilter = ConvolutionFilter()
+        val laplacian = intArrayOf(
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1)
+        var bmout = filtro.apply_Mask(laplacian,bitmap)
+        return  bmout
+    }
+    fun gaussian( bitmap : Bitmap) : Bitmap {
+
+        var filtro : ConvolutionFilter = ConvolutionFilter()
+        val laplacian = intArrayOf(
+                1, 2, 1,
+                2, 4, 2,
+                1, 2, 1)
+        var bmout = filtro.apply_Mask(laplacian,bitmap)
+        return  bmout
+    }
+    fun sharpen( bitmap : Bitmap) : Bitmap {
+
+        var filtro : ConvolutionFilter = ConvolutionFilter()
+        val laplacian = intArrayOf(
+                0, -2, 0,
+                -2,  11, -2,
+                0, -2, -0)
+        var bmout = filtro.apply_Mask(laplacian,bitmap)
+        return  bmout
+    }
+    private fun mean( bitmap : Bitmap) : Bitmap {
+
+        var filtro : ConvolutionFilter = ConvolutionFilter()
+        val laplacian = intArrayOf(
+                -1, -1, -1,
+                -1,  9, -1,
+                -1, -1, -1)
+        var bmout = filtro.apply_Mask(laplacian,bitmap)
+        return  bmout
+    }
+    private fun embossing(bitmap : Bitmap) : Bitmap {
+
+        var filtro : ConvolutionFilter = ConvolutionFilter()
+        val laplacian = intArrayOf(
+                -1, 0, -1,
+                0,  4, 0,
+                -1, 0, -1)
+        var bmout = filtro.apply_Mask(laplacian,bitmap)
+        return  bmout
+    }
+
+    private fun edge(bitmap : Bitmap) : Bitmap {
+
+        var filtro : ConvolutionFilter = ConvolutionFilter()
+        val laplacian = intArrayOf(
+                1, 1, 1,
+                0,  0, 0,
+                -1, -1, -1)
+        var bmout = filtro.apply_Mask(laplacian,bitmap)
+        return  bmout
+    }
+    fun invento2(src: Bitmap) : Bitmap {
+        // create output bitmap
+        val bmOut = Bitmap.createBitmap(src.width, src.height, src.config)
+        // pixel information
+        var A: Int
+        var R: Int
+        var G: Int
+        var B: Int
+        var pixel: Int
+
+        // get image size
+        val width = src.width
+        val height = src.height
+
+        // scan through every single pixel
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                // get one pixel color
+                pixel = src.getPixel(x, y)
+                // retrieve color of all channels
+                A = Color.alpha(pixel)
+                R = Color.red(pixel)
+                G = Color.green(pixel)
+                B = Color.blue(pixel)
+                // take conversion up to one single value
+
+                B = 0
+
+
+                // set new pixel color to output bitmap
+                bmOut.setPixel(x, y, Color.argb(A, R, G, B))
+            }
+        }
+
+        // return final image
+        return bmOut
+    }
+    fun invento3 (src : Bitmap) :Bitmap {
+        // create output bitmap
+        var bmOut = Bitmap.createBitmap(src.width, src.height, src.config)
+        // pixel information
+        var A: Int
+        var R: Int
+        var G: Int
+        var B: Int
+        var pixel: Int
+
+        // get image size
+        val width = src.width
+        val height = src.height
+
+        // scan through every single pixel
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                // get one pixel color
+                pixel = src.getPixel(x, y)
+                // retrieve color of all channels
+                A = Color.alpha(pixel)
+                R = Color.red(pixel)
+                G = Color.green(pixel)
+                B = Color.blue(pixel)
+                // take conversion up to one single value
+
+
+                R = 0
+
+
+                // set new pixel color to output bitmap
+                bmOut.setPixel(x, y, Color.argb(A, R, G, B))
+            }
+        }
+        bmOut = sharpen(bmOut)
+        // return final image
+        return bmOut
+    }
+
+    fun invento4(src : Bitmap) :Bitmap{
+        // create output bitmap
+        val bmOut = Bitmap.createBitmap(src.width, src.height, src.config)
+        // pixel information
+        var A: Int
+        var R: Int
+        var G: Int
+        var B: Int
+        var pixel: Int
+
+        // get image size
+        val width = src.width
+        val height = src.height
+
+        // scan through every single pixel
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                // get one pixel color
+                pixel = src.getPixel(x, y)
+                // retrieve color of all channels
+                A = Color.alpha(pixel)
+                R = Color.red(pixel)
+                G = Color.green(pixel)
+                B = Color.blue(pixel)
+                // take conversion up to one single value
+                if(x> width/4 && x < width*3/4 && y>height/4 && y < height*3/4){
+                    B = 0
+                    R = 0
+                } else if(x> width/5 && x < width*4/5 && y>height/5 && y < height*4/5){
+                    G = 0
+                    B = 0
+
+                }else if(x> width/6 && x < width*5/6 && y>height/6 && y < height*5/6){
+                    G = 0
+                    R = 0
+                } else {
+                    B = 0
+                }
+
+
+
+                // set new pixel color to output bitmap
+                bmOut.setPixel(x, y, Color.argb(A, R, G, B))
+            }
+        }
+
+        // return final image
+        return bmOut
+    }
+    fun mirror (src:Bitmap) : Bitmap {
+        // create output bitmap
+        val bmOut = Bitmap.createBitmap(src.width, src.height, src.config)
+        // pixel information
+        var A: Int
+        var R: Int
+        var G: Int
+        var B: Int
+        var pixel: Int
+
+        // get image size
+        val width = src.width
+        val height = src.height
+        var posicion =width-1
+        // scan through every single pixel
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                // get one pixel color
+                pixel = src.getPixel(x, y)
+
+
+
+                // set new pixel color to output bitmap
+                bmOut.setPixel(posicion-x, y,pixel)
+            }
+        }
+
+        // return final image
+        return bmOut
+    }
+
 
 
 
